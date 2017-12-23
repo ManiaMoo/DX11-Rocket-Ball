@@ -39,6 +39,7 @@ Application::Application()
 	_pVertexBuffer = nullptr;
 	_pIndexBuffer = nullptr;
 	_pConstantBuffer = nullptr;
+	_isWireframe = 0;
 }
 
 Application::~Application()
@@ -57,6 +58,7 @@ HRESULT Application::Initialise(HINSTANCE hInstance, int nCmdShow)
     GetClientRect(_hWnd, &rc);
     _WindowWidth = rc.right - rc.left;
     _WindowHeight = rc.bottom - rc.top;
+	_isWireframe = 0;
 
     if (FAILED(InitDevice()))
     {
@@ -421,6 +423,14 @@ HRESULT Application::InitDevice()
 	bd.CPUAccessFlags = 0;
     hr = _pd3dDevice->CreateBuffer(&bd, nullptr, &_pConstantBuffer);
 
+	D3D11_RASTERIZER_DESC wfdesc;
+	ZeroMemory(&wfdesc, sizeof(D3D11_RASTERIZER_DESC));
+	wfdesc.FillMode = D3D11_FILL_WIREFRAME;
+	wfdesc.CullMode = D3D11_CULL_NONE;
+	hr = _pd3dDevice->CreateRasterizerState(&wfdesc, &_wireFrame);
+
+
+
     if (FAILED(hr))
         return hr;
 
@@ -441,6 +451,7 @@ void Application::Cleanup()
     if (_pSwapChain) _pSwapChain->Release();
     if (_pImmediateContext) _pImmediateContext->Release();
     if (_pd3dDevice) _pd3dDevice->Release();
+	if (_wireFrame) _wireFrame->Release();
 	if (_depthStencilView) _depthStencilView->Release();
 	if (_depthStencilBuffer) _depthStencilBuffer->Release();
 
@@ -466,6 +477,20 @@ void Application::Update()
         t = (dwTimeCur - dwTimeStart) / 1000.0f;
     }
 
+	
+
+	if (GetKeyState(VK_ESCAPE))
+	{
+		if (_isWireframe == 0)
+		{
+			_isWireframe = 1;
+		}
+		else if (_isWireframe == 1)
+		{
+			_isWireframe = 0;
+		}
+	}
+
     //
     // Animate the cube
     //
@@ -484,10 +509,20 @@ void Application::Draw()
 
 	XMMATRIX world[_cubenumber];
 
+	if (_isWireframe == 1)
+	{
+		_pImmediateContext->RSSetState(_wireFrame);
+	}
+	else
+	{
+		_pImmediateContext->RSSetState(NULL);
+	}
+
 	for (int i = 0; i < _cubenumber; i++)
 	{
 		world[i] = XMLoadFloat4x4(&_world[i]);
 	}
+
 	XMMATRIX view = XMLoadFloat4x4(&_view);
 	XMMATRIX projection = XMLoadFloat4x4(&_projection);
 	//
@@ -511,6 +546,7 @@ void Application::Draw()
 		_pImmediateContext->PSSetShader(_pPixelShader, nullptr, 0);
 		_pImmediateContext->DrawIndexed(36, 0, 0);
 	}
+
 	//
 	// Present our back buffer to our front buffer
 	//

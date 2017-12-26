@@ -157,7 +157,7 @@ HRESULT Application::InitVertexBuffer()
 	HRESULT hr;
 
     // Create vertex buffer
-    SimpleVertex vertices[] =
+    SimpleVertex cube[] =
     {
 		{ XMFLOAT3(-1.0f, 1.0f, -1.0f) , XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f) },
 		{ XMFLOAT3(1.0f, 1.0f, -1.0f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f) },
@@ -169,17 +169,25 @@ HRESULT Application::InitVertexBuffer()
 		{ XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f) },
 		{ XMFLOAT3(1.0f, -1.0f, 1.0f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f) },
     };
+	SimpleVertex pyramid[] =
+	{
+		{ XMFLOAT3(-1.0f, -1.0f, 1.0f), XMFLOAT4(-1.0f, -1.0f, 1.0f, 1.0f) },
+		{ XMFLOAT3(1.0f, -1.0f, 1.0f),  XMFLOAT4(1.0f, -1.0f, 1.0f, 1.0f) },
+		{ XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT4(-1.0f, -1.0f, -1.0f, 1.0f) },
+		{ XMFLOAT3(1.0f, -1.0f, -1.0f), XMFLOAT4(1.0f, -1.0f, -1.0f, 1.0f) },
+		{ XMFLOAT3(0.0f, 1.0f, 0.0f),   XMFLOAT4(0.0f, 2.0f, 0.0f, 1.0f) },
+	};
 
     D3D11_BUFFER_DESC bd;
 	ZeroMemory(&bd, sizeof(bd));
     bd.Usage = D3D11_USAGE_DEFAULT;
-    bd.ByteWidth = sizeof(SimpleVertex) * 12;
+    bd.ByteWidth = sizeof(SimpleVertex) * 5;
     bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bd.CPUAccessFlags = 0;
 
     D3D11_SUBRESOURCE_DATA InitData;
 	ZeroMemory(&InitData, sizeof(InitData));
-    InitData.pSysMem = vertices;
+    InitData.pSysMem = pyramid;
 
     hr = _pd3dDevice->CreateBuffer(&bd, &InitData, &_pVertexBuffer);
 
@@ -194,7 +202,7 @@ HRESULT Application::InitIndexBuffer()
 	HRESULT hr;
 
     // Create index buffer
-    WORD indices[] =
+    WORD cubeIndices[] =
     {
 		0,1,2,
 		2,1,3,
@@ -214,6 +222,15 @@ HRESULT Application::InitIndexBuffer()
 		6,3,7,
 		6,2,3,
     };
+	WORD pyramidIndices[] =
+	{
+		0,2,1,
+		1,2,3,
+		0,1,4,
+		1,3,4,
+		3,2,4,
+		2,0,4,
+	};
 
 	D3D11_BUFFER_DESC bd;
 	ZeroMemory(&bd, sizeof(bd));
@@ -225,7 +242,7 @@ HRESULT Application::InitIndexBuffer()
 
 	D3D11_SUBRESOURCE_DATA InitData;
 	ZeroMemory(&InitData, sizeof(InitData));
-    InitData.pSysMem = indices;
+    InitData.pSysMem = pyramidIndices;
     hr = _pd3dDevice->CreateBuffer(&bd, &InitData, &_pIndexBuffer);
 
     if (FAILED(hr))
@@ -544,7 +561,7 @@ void Application::Draw()
 		_pImmediateContext->VSSetShader(_pVertexShader, nullptr, 0);
 		_pImmediateContext->VSSetConstantBuffers(0, 1, &_pConstantBuffer);
 		_pImmediateContext->PSSetShader(_pPixelShader, nullptr, 0);
-		_pImmediateContext->DrawIndexed(36, 0, 0);
+		_pImmediateContext->DrawIndexed(18, 0, 0);
 	}
 
 	//
